@@ -4,11 +4,11 @@ C++ Pitfalls
 ## Memory
 
 ### std::out_ptr
-1. Don't use `std::out_ptr` and the holded smart pointer in ths same expression.
+1. Don't use `std::out_ptr` and the held smart pointer in the same expression.
 
     **ISSUE**
 
-    The following code will output different on different compiler:
+    The following code will produce different output depending on the compiler:
 
     ```cpp
     #include <memory>
@@ -32,21 +32,21 @@ C++ Pitfalls
     |Compiler|Compile Command|Result|Conforming Standard|
     |--|--|--|--|
     |gcc 15.0.1|g++ -std=c++23|p is not-empty|No|
-    |clang 20.1.2|clang++ -std=c++23 -stdlib=libc++ c.cpp|p is empty|Yes|
+    |clang 20.1.2|clang++ -std=c++23 -stdlib=libc++|p is empty|Yes|
     |msvc 19.44.35211|cl /std:c++latest|p is empty|Yes|
 
-    In c++ standard, [`std::out_ptr`](https://en.cppreference.com/w/cpp/memory/out_ptr_t/out_ptr) will create a temporary object
-    which has type [`std::out_ptr_t`](https://en.cppreference.com/w/cpp/memory/out_ptr_t.html). When this temporary object is destroyed,
-    the adapted smart pointer object will be rested with the result. In the above code, when `!p` is evaluated, the temporary object
-    hasn't been destoryed, so the value of `p` is still empty. The output of the above code should be `p is empty`.
+    According to the C++ standard, [`std::out_ptr`](https://en.cppreference.com/w/cpp/memory/out_ptr_t/out_ptr) creates a temporary object
+    of type [`std::out_ptr_t`](https://en.cppreference.com/w/cpp/memory/out_ptr_t.html). When this temporary object is destroyed, it resets
+    the adapted smart pointer with the result. In the above code, when `!p` is evaluated, the temporary object has not yet been destroyed,
+    so the value of `p` remains empty. Therefore, the correct output should be `p is empty`.
 
-    In gcc standard library implementation [libstdc++](https://github.com/gcc-mirror/gcc/blob/6deab186535a5aa9f930e2db637089865d0bc4ff/libstdc%2B%2B-v3/include/bits/out_ptr.h#L121),
-    it returns the address of the internal smart pointer object directly, so `p` will be set eariler. This behavior isn't conforming the standard.
+    In the GCC standard library implementation [libstdc++](https://github.com/gcc-mirror/gcc/blob/6deab186535a5aa9f930e2db637089865d0bc4ff/libstdc%2B%2B-v3/include/bits/out_ptr.h#L121),
+    it returns the address of the internal smart pointer object directly, so `p` will be set earlier. This behavior does not conform to the standard.
 
-    This is a bug of libstdc++ actually, but because this issue has existed for a long time and some existing codes might relay on this issue already.
-    gcc may not fix it to avoid introducing a breaking change.
+    This is technically a bug in libstdc++, but because it has existed for a long time and some existing code may rely on it. GCC may choose
+    not to fix it to avoid introducing a breaking change.
 
     **ADVICE**
 
-    Don't use `std::out_ptr` and the holded smart pointer in the same expression. Depends on different compiler, the smart pointer
-    may be set or not be set before the expression evaluated.
+    Don't use `std::out_ptr` and the held smart pointer in the same expression. Depending on the compiler, the smart pointer may or may not be
+    set before the expression is evaluated.
